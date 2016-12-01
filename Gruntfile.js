@@ -7,7 +7,7 @@ module.exports = function(grunt) {
         separator: ';',
       },
       dist: {
-        src: ['public/**/*.js'],
+        src: ['public/client/*.js'],
         dest: 'public/dist/built.js',
       },
     },
@@ -21,6 +21,8 @@ module.exports = function(grunt) {
       }
     },
 
+    clean: ['public/dist/*.js'],
+
     nodemon: {
       dev: {
         script: 'server.js'
@@ -28,7 +30,7 @@ module.exports = function(grunt) {
     },
 
     uglify: {
-      my_target: {
+      'my_target': {
         files: {
           'public/dist/build.min.js': ['public/dist/built.js']
         }
@@ -37,7 +39,7 @@ module.exports = function(grunt) {
 
     eslint: {
       target: [
-        // Add list of files to lint here
+        'app/**/*.js', 'lib/**/*.js', 'public/client/*.js', 'views/**/*.js'
       ]
     },
 
@@ -63,6 +65,8 @@ module.exports = function(grunt) {
 
     shell: {
       prodServer: {
+        command: ['git add .', 'git commit -m \'Production Server push\'', 'git push live master']
+        .join('&&')
       }
     },
   });
@@ -75,6 +79,7 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-mocha-test');
   grunt.loadNpmTasks('grunt-shell');
   grunt.loadNpmTasks('grunt-nodemon');
+  grunt.loadNpmTasks('grunt-contrib-clean');
 
   grunt.registerTask('server-dev', function (target) {
     grunt.task.run([ 'nodemon', 'watch' ]);
@@ -84,16 +89,18 @@ module.exports = function(grunt) {
   // Main grunt tasks
   ////////////////////////////////////////////////////
 
-  grunt.registerTask('test', [
+  grunt.registerTask('test', [ 'eslint',
     'mochaTest'
   ]);
 
   grunt.registerTask('build', [
+    'clean', 'concat', 'uglify'
   ]);
 
   grunt.registerTask('upload', function(n) {
     if (grunt.option('prod')) {
       // add your production server task here
+      grunt.task.run('shell');
     } else {
       grunt.task.run([ 'server-dev' ]);
     }
@@ -101,7 +108,7 @@ module.exports = function(grunt) {
 
   grunt.registerTask('deploy', [
     // add your deploy tasks here
-
+    'build', 'test', 'upload'
   ]);
 
 
